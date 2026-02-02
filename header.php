@@ -124,6 +124,58 @@ $site_main_rgb = "$r $g $b";
 <!DOCTYPE html>
 <html lang="th" class="scroll-smooth">
 <head>
+    <?php
+// เชื่อมต่อฐานข้อมูล (ถ้าในไฟล์ header.php มีการเชื่อมต่อแล้ว ไม่ต้องใส่บรรทัดนี้)
+require_once 'db.php'; 
+
+// ดึงข้อมูลตั้งค่าจาก Database
+if (!isset($config)) {
+    $stmt = $pdo->prepare("SELECT * FROM settings LIMIT 1");
+    $stmt->execute();
+    $config = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// 1. จัดการ URL ของหน้าปัจจุบัน (เพื่อให้เวลาแชร์ ลิงก์จะตรงกับหน้าที่เปิดอยู่)
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+$current_url = "$protocol://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+
+// 2. จัดการรูปภาพ Preview (เลือกรูปสไลด์แรกก่อน ถ้าไม่มีค่อยใช้โลโก้)
+// ต้องถอดรหัส JSON จาก banner_img ก่อน
+$banners = json_decode($config['banner_img'], true);
+$og_image = (!empty($banners) && isset($banners[0])) ? $banners[0] : $config['site_logo'];
+
+// ถ้า URL รูปเป็นแบบ relative (เช่น /uploads/...) ให้เติม domain เข้าไป
+if (strpos($og_image, 'http') === false) {
+    $og_image = "$protocol://$_SERVER[HTTP_HOST]/" . ltrim($og_image, '/');
+}
+?>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title><?php echo htmlspecialchars($config['site_name']); ?> | <?php echo htmlspecialchars($config['site_description']); ?></title>
+<meta name="description" content="<?php echo htmlspecialchars($config['site_description']); ?>">
+<meta name="keywords" content="เติมเกม, ร้านค้าออนไลน์, <?php echo htmlspecialchars($config['site_name']); ?>">
+<meta name="author" content="<?php echo htmlspecialchars($config['site_name']); ?>">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="<?php echo $current_url; ?>">
+<meta property="og:title" content="<?php echo htmlspecialchars($config['site_name']); ?>">
+<meta property="og:description" content="<?php echo htmlspecialchars($config['site_description']); ?>">
+<meta property="og:image" content="<?php echo $og_image; ?>">
+<meta property="og:site_name" content="<?php echo htmlspecialchars($config['site_name']); ?>">
+<meta property="og:locale" content="th_TH">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="<?php echo $current_url; ?>">
+<meta name="twitter:title" content="<?php echo htmlspecialchars($config['site_name']); ?>">
+<meta name="twitter:description" content="<?php echo htmlspecialchars($config['site_description']); ?>">
+<meta name="twitter:image" content="<?php echo $og_image; ?>">
+
+<link rel="icon" href="<?php echo $config['site_logo']; ?>" type="image/x-icon">
+<link rel="shortcut icon" href="<?php echo $config['site_logo']; ?>" type="image/x-icon">
+
+<meta name="theme-color" content="#6366f1">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $web_config->site_name; ?></title>
